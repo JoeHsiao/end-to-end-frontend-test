@@ -28,12 +28,30 @@ describe('Blog app', () => {
       await expect(page.getByText('Steph Curry logged in')).toBeVisible()
     })
 
-    test.only('fails with wrong credentials', async ({ page }) => {
+    test('fails with wrong credentials', async ({ page }) => {
       await page.locator('input[name="Username"]').fill('wrongname')
       await page.locator('input[name="Password"]').fill('wrongpassword')
       await page.getByText('login').click()
 
       await expect(page.getByText('wrong username or password')).toBeVisible()
+    })
+  })
+
+  describe('When logged in', () => {
+    beforeEach(async ({ page }) => {
+      await page.locator('input[name="Username"]').fill('stcurry')
+      await page.locator('input[name="Password"]').fill('123')
+      await page.getByText('login').click()
+    })
+
+    test.only('a new blog can be created', async ({ page }) => {
+      await page.getByText('new blog').click()
+      await page.getByText('create new', { exact: true }).waitFor()
+      await page.locator('input[id="title"]').fill('how to shoot basketball')
+      await page.locator('input[id="author"]').fill('Steph Curry')
+      await page.locator('input[id="url"]').fill('howtoshootbasketball.com')
+      await page.getByText('create', { exact: true }).click()
+      await page.getByText('how to shoot basketball Steph Curry')
     })
   })
 })
