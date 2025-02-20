@@ -1,4 +1,5 @@
 const { test, expect, beforeEach, describe } = require('@playwright/test')
+const { createBlogWith } = require('./helper')
 
 describe('Blog app', () => {
   beforeEach(async ({ page, request }) => {
@@ -44,14 +45,22 @@ describe('Blog app', () => {
       await page.getByText('login').click()
     })
 
-    test.only('a new blog can be created', async ({ page }) => {
-      await page.getByText('new blog').click()
-      await page.getByText('create new', { exact: true }).waitFor()
-      await page.locator('input[id="title"]').fill('how to shoot basketball')
-      await page.locator('input[id="author"]').fill('Steph Curry')
-      await page.locator('input[id="url"]').fill('howtoshootbasketball.com')
-      await page.getByText('create', { exact: true }).click()
-      await page.getByText('how to shoot basketball Steph Curry')
+    test('a new blog can be created', async ({ page }) => {
+      createBlogWith(page, 'how to shoot basketball', 'Steph Curry', 'howtoshootbasketball.com')
+      await expect(page.getByText('how to shoot basketball Steph')).toBeVisible()
+    })
+
+    describe('When there are blogs', () => {
+      beforeEach(async ({ page }) => {
+        createBlogWith(page, "testing title", "testing author", "testing url")
+      })
+
+      test('blogs can be liked', async ({ page }) => {
+        await page.getByText('view', { exact: true }).click()
+        await page.getByText('likes 0 like', { exact: true }).waitFor()
+        await page.getByRole('button', { name: 'like' }).click()
+        await expect(page.getByText('likes 1 like', { exact: true })).toBeVisible()
+      })
     })
   })
 })
