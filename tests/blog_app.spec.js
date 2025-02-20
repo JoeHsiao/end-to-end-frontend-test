@@ -61,6 +61,21 @@ describe('Blog app', () => {
         await page.getByRole('button', { name: 'like' }).click()
         await expect(page.getByText('likes 1 like', { exact: true })).toBeVisible()
       })
+
+      test('blogs can be removed', async ({ page }) => {
+        await page.getByText('view', { exact: true }).click()
+        await page.getByText('remove', { exact: true }).waitFor()
+
+        page.on('dialog', async dialog => {
+          if (dialog.type() === 'confirm') {
+            await dialog.accept()
+          }
+        })
+
+        await page.getByText('remove', { exact: true }).click()
+        await page.getByRole('button', { name: 'new blog' }).waitFor()
+        await expect(page.getByText('testing title testing author')).not.toBeVisible()
+      })
     })
   })
 })
