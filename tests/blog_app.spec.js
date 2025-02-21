@@ -1,5 +1,5 @@
 const { test, expect, beforeEach, describe } = require('@playwright/test')
-const { createUser, createBlogWith } = require('./helper')
+const { createUser, createBlogWith, loginWith } = require('./helper')
 
 describe('Blog app', () => {
   beforeEach(async ({ page, request }) => {
@@ -16,27 +16,19 @@ describe('Blog app', () => {
 
   describe('Login', () => {
     test('succeeds with correct credentials', async ({ page }) => {
-      await page.locator('input[name="Username"]').fill('stcurry')
-      await page.locator('input[name="Password"]').fill('123')
-      await page.getByText('login').click()
-
+      await loginWith(page, 'stcurry', '123')
       await expect(page.getByText('Steph Curry logged in')).toBeVisible()
     })
 
     test('fails with wrong credentials', async ({ page }) => {
-      await page.locator('input[name="Username"]').fill('wrongname')
-      await page.locator('input[name="Password"]').fill('wrongpassword')
-      await page.getByText('login').click()
-
+      await loginWith(page, 'wrongname', 'wrongpassword')
       await expect(page.getByText('wrong username or password')).toBeVisible()
     })
   })
 
   describe('When logged in', () => {
     beforeEach(async ({ page }) => {
-      await page.locator('input[name="Username"]').fill('stcurry')
-      await page.locator('input[name="Password"]').fill('123')
-      await page.getByText('login').click()
+      loginWith(page, 'stcurry', '123')
     })
 
     test('a new blog can be created', async ({ page }) => {

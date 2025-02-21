@@ -7,6 +7,11 @@ const createUser = async (request, name, username, password) => {
     }
   })
 }
+const loginWith = async (page, username, password) => {
+  await page.locator('input[name="Username"]').fill(username)
+  await page.locator('input[name="Password"]').fill(password)
+  await page.getByText('login').click()
+}
 
 const createBlogWith = async (page, title, author, url) => {
   await page.getByText('new blog').click()
@@ -18,4 +23,4 @@ const createBlogWith = async (page, title, author, url) => {
   await page.getByRole('button', { name: 'new blog' }).waitFor()
 }
 
-export { createUser, createBlogWith }
+export { createUser, createBlogWith, loginWith }
