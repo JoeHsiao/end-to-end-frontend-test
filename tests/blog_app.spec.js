@@ -36,10 +36,9 @@ describe('Blog app', () => {
       await expect(page.getByText('how to shoot basketball Steph')).toBeVisible()
     })
 
-    describe('When there are blogs', () => {
-      beforeEach(async ({ page, request }) => {
+    describe('When there is a blog', () => {
+      beforeEach(async ({ page }) => {
         await createBlogWith(page, "testing title", "testing author", "testing url")
-
       })
 
       test('blogs can be liked', async ({ page }) => {
@@ -77,6 +76,39 @@ describe('Blog app', () => {
         await page.getByText('view', { exact: true }).click()
         await page.getByRole('button', { name: 'like' }).waitFor()
         await expect(page.getByRole('button', { name: 'remove' })).not.toBeVisible()
+      })
+    })
+
+    describe('when there are multiple blogs', () => {
+      beforeEach(async ({ page }) => {
+        await createBlogWith(page, "title1", "author1", "url1")
+        await createBlogWith(page, "title2", "author2", "url2")
+        await createBlogWith(page, "title3", "author3", "url3")
+      })
+      test('blogs are ordered by likes', async ({ page }) => {
+        const viewDivForTitle1 = page.getByText('title1 author1 view')
+        await viewDivForTitle1.getByRole('button', { name: 'view' }).click()
+        const likeButtonForTitle1 = page.locator('div:text-is("title1") >> .. >> button:text-is("like")');
+        await likeButtonForTitle1.click()
+
+        const viewDivForTitle2 = page.getByText('title2 author2 view')
+        await viewDivForTitle2.getByRole('button', { name: 'view' }).click()
+        const likeButtonForTitle2 = page.locator('div:text-is("title2") >> .. >> button:text-is("like")');
+        await likeButtonForTitle2.click()
+        await likeButtonForTitle2.click()
+        await likeButtonForTitle2.click()
+
+        const viewDivForTitle3 = page.getByText('title3 author3 view')
+        await viewDivForTitle3.getByRole('button', { name: 'view' }).click()
+        const likeButtonForTitle3 = page.locator('div:text-is("title3") >> .. >> button:text-is("like")');
+        await likeButtonForTitle3.click()
+        await likeButtonForTitle3.click()
+
+        await page.reload()
+        await page.getByText('title1 author1 view').waitFor()
+
+        const blogs = await page.locator('text=/title\\d author\\d view/').allTextContents()
+        expect(blogs).toEqual(['title2 author2 view', 'title3 author3 view', 'title1 author1 view'])
       })
     })
   })
