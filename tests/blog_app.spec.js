@@ -1,16 +1,10 @@
 const { test, expect, beforeEach, describe } = require('@playwright/test')
-const { createBlogWith } = require('./helper')
+const { createUser, createBlogWith } = require('./helper')
 
 describe('Blog app', () => {
   beforeEach(async ({ page, request }) => {
     await request.post('http://localhost:3003/api/testing/reset')
-    await request.post('http://localhost:3003/api/users', {
-      data: {
-        name: 'Steph Curry',
-        username: 'stcurry',
-        password: '123'
-      }
-    })
+    await createUser(request, 'Steph Curry', 'stcurry', '123')
     await page.goto('http://localhost:5173')
   })
 
@@ -46,13 +40,14 @@ describe('Blog app', () => {
     })
 
     test('a new blog can be created', async ({ page }) => {
-      createBlogWith(page, 'how to shoot basketball', 'Steph Curry', 'howtoshootbasketball.com')
+      await createBlogWith(page, 'how to shoot basketball', 'Steph Curry', 'howtoshootbasketball.com')
       await expect(page.getByText('how to shoot basketball Steph')).toBeVisible()
     })
 
     describe('When there are blogs', () => {
-      beforeEach(async ({ page }) => {
-        createBlogWith(page, "testing title", "testing author", "testing url")
+      beforeEach(async ({ page, request }) => {
+        await createBlogWith(page, "testing title", "testing author", "testing url")
+
       })
 
       test('blogs can be liked', async ({ page }) => {
@@ -76,6 +71,22 @@ describe('Blog app', () => {
         await page.getByRole('button', { name: 'new blog' }).waitFor()
         await expect(page.getByText('testing title testing author')).not.toBeVisible()
       })
+
+      test('the remove button is not shown to other users', async ({ page, request }) => {
+        await createUser(request, 'User Name2', 'username2', 'password2')
+        await page.getByRole('button', { name: 'logout' }).click()
+        await page.getByText('Log in to application').waitFor()
+
+        await page.locator('input[name="Username"]').fill('username2')
+        await page.locator('input[name="Password"]').fill('password2')
+        await page.getByRole('button', { name: 'login' }).click()
+
+        await expect(page.getByText('User Name2 logged in')).toBeVisible()
+        await page.getByText('view', { exact: true }).click()
+        await page.getByRole('button', { name: 'like' }).waitFor()
+        await expect(page.getByRole('button', { name: 'remove' })).not.toBeVisible()
+      })
     })
   })
+
 })
